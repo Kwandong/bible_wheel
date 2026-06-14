@@ -397,39 +397,173 @@ void openSearchDialog() {
   }
 
   Widget testamentMenu() {
-  return PopupMenuButton<String>(
-    icon: const Icon(Icons.menu_rounded, size: 32),
-    onSelected: changeTestament,
-    itemBuilder: (context) => [
-      PopupMenuItem(
-        value: '구약',
-        child: Row(
-          children: [
-            if (selectedTestament == '구약')
-              const Icon(Icons.check_rounded, size: 20),
-            if (selectedTestament != '구약')
-              const SizedBox(width: 20),
-            const SizedBox(width: 8),
-            const Text('구약'),
-          ],
-        ),
-      ),
-      PopupMenuItem(
-        value: '신약',
-        child: Row(
-          children: [
-            if (selectedTestament == '신약')
-              const Icon(Icons.check_rounded, size: 20),
-            if (selectedTestament != '신약')
-              const SizedBox(width: 20),
-            const SizedBox(width: 8),
-            const Text('신약'),
-          ],
-        ),
-      ),
-    ],
+  return IconButton(
+    icon: const Icon(
+      Icons.menu_rounded,
+      size: 34,
+      color: Color(0xFF333333),
+    ),
+    onPressed: openMainMenu,
   );
 }
+
+void openMainMenu() {
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Colors.transparent,
+    barrierColor: Colors.black.withOpacity(0.45),
+    builder: (context) {
+      return Container(
+        margin: const EdgeInsets.fromLTRB(18, 0, 18, 18),
+        padding: const EdgeInsets.fromLTRB(22, 14, 22, 18),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFAFAFA),
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.12),
+              blurRadius: 24,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 42,
+              height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFFD0D0D0),
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            Row(
+              children: [
+                Text(
+                  'Bible Wheel',
+                  style: GoogleFonts.notoSansKr(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF333333),
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(
+                    Icons.close_rounded,
+                    size: 22,
+                    color: Color(0xFF555555),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 4),
+
+            menuRow(
+              title: '구약',
+              checked: selectedTestament == '구약',
+              onTap: () {
+                Navigator.pop(context);
+                changeTestament('구약');
+              },
+            ),
+            menuRow(
+              title: '신약',
+              checked: selectedTestament == '신약',
+              onTap: () {
+                Navigator.pop(context);
+                changeTestament('신약');
+              },
+            ),
+
+            const Divider(height: 18),
+
+            menuRow(
+              icon: Icons.star_border_rounded,
+              title: '즐겨찾기',
+              onTap: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('즐겨찾기는 다음 버전에서 추가합니다.')),
+                );
+              },
+            ),
+            menuRow(
+              icon: Icons.history_rounded,
+              title: '최근 본 말씀',
+              onTap: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('최근 본 말씀은 다음 버전에서 추가합니다.')),
+                );
+              },
+            ),
+            menuRow(
+              icon: Icons.info_outline_rounded,
+              title: '정보',
+              onTap: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Bible Wheel v0.6')),
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+Widget menuRow({
+  IconData? icon,
+  required String title,
+  required VoidCallback onTap,
+  bool checked = false,
+}) {
+  return ListTile(
+    dense: true,
+    visualDensity: const VisualDensity(vertical: -2),
+    contentPadding: EdgeInsets.zero,
+    minLeadingWidth: 28,
+    leading: icon != null
+        ? Icon(
+            icon,
+            size: 22,
+            color: const Color(0xFF555555),
+          )
+        : Icon(
+            checked
+                ? Icons.radio_button_checked_rounded
+                : Icons.radio_button_unchecked_rounded,
+            size: 21,
+            color: const Color(0xFF555555),
+          ),
+    title: Text(
+      title,
+      style: GoogleFonts.notoSansKr(
+        fontSize: 17,
+        fontWeight: FontWeight.w500,
+        color: const Color(0xFF333333),
+      ),
+    ),
+    trailing: checked && icon != null
+        ? const Icon(
+            Icons.check_rounded,
+            size: 20,
+            color: Color(0xFF555555),
+          )
+        : null,
+    onTap: onTap,
+  );
+}
+
 
   Widget wheelPicker({
     required FixedExtentScrollController controller,
