@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 void main() {
   runApp(const BibleWheelApp());
@@ -14,25 +17,12 @@ class BibleWheelApp extends StatelessWidget {
       title: 'Bible Wheel',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        fontFamily: 'Arial',
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
         useMaterial3: true,
       ),
       home: const BibleWheelPage(),
     );
   }
-}
-
-class BibleBook {
-  final String name;
-  final String testament;
-  final Map<int, Map<int, String>> chapters;
-
-  const BibleBook({
-    required this.name,
-    required this.testament,
-    required this.chapters,
-  });
 }
 
 class BibleWheelPage extends StatefulWidget {
@@ -43,79 +33,16 @@ class BibleWheelPage extends StatefulWidget {
 }
 
 class _BibleWheelPageState extends State<BibleWheelPage> {
+  Map<String, dynamic> bible = {};
+
   String selectedTestament = '구약';
-  int selectedBookIndex = 0;
-  int selectedChapter = 1;
-  int selectedVerse = 1;
+  String selectedBook = '';
+  String selectedChapter = '';
+  String selectedVerse = '';
 
   late FixedExtentScrollController bookController;
   late FixedExtentScrollController chapterController;
   late FixedExtentScrollController verseController;
-
-  final List<BibleBook> books = [
-    BibleBook(
-      name: '창세기',
-      testament: '구약',
-      chapters: {
-        1: {
-          1: '태초에 하나님이 천지를 창조하시니라',
-          2: '땅이 혼돈하고 공허하며 흑암이 깊음 위에 있고 하나님의 신은 수면에 운행하시니라',
-          3: '하나님이 가라사대 빛이 있으라 하시매 빛이 있었고',
-        },
-        2: {
-          1: '천지와 만물이 다 이루니라',
-          2: '하나님의 지으시던 일이 일곱째 날이 이를 때에 마치니',
-        },
-      },
-    ),
-    BibleBook(
-      name: '출애굽기',
-      testament: '구약',
-      chapters: {
-        1: {
-          1: '야곱과 함께 각기 권속을 데리고 애굽에 이른 이스라엘 아들들의 이름은 이러하니',
-          2: '르우벤과 시므온과 레위와 유다와',
-        },
-        2: {
-          1: '레위 족속 중 한 사람이 가서 레위 여자에게 장가들었더니',
-        },
-      },
-    ),
-    BibleBook(
-      name: '마태복음',
-      testament: '신약',
-      chapters: {
-        1: {
-          1: '아브라함과 다윗의 자손 예수 그리스도의 세계라',
-          2: '아브라함이 이삭을 낳고 이삭은 야곱을 낳고',
-        },
-      },
-    ),
-    BibleBook(
-      name: '요한복음',
-      testament: '신약',
-      chapters: {
-        3: {
-          16: '하나님이 세상을 이처럼 사랑하사 독생자를 주셨으니',
-        },
-      },
-    ),
-  ];
-
-  List<BibleBook> get filteredBooks =>
-      books.where((book) => book.testament == selectedTestament).toList();
-
-  BibleBook get selectedBook => filteredBooks[selectedBookIndex];
-
-  List<int> get chapterNumbers => selectedBook.chapters.keys.toList()..sort();
-
-  List<int> get verseNumbers =>
-      selectedBook.chapters[selectedChapter]!.keys.toList()..sort();
-
-  String get selectedText {
-    return selectedBook.chapters[selectedChapter]?[selectedVerse] ??
-        '본문 데이터가 없습니다.';
-  }
 
   @override
   void initState() {
@@ -123,6 +50,23 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
     bookController = FixedExtentScrollController();
     chapterController = FixedExtentScrollController();
     verseController = FixedExtentScrollController();
+    loadBible();
+  }
+
+  Future<void> loadBible() async {
+    final jsonString = await rootBundle.loadString('assets/bible.json');
+    final data = json.decode(jsonString) as Map<String, dynamic>;
+
+    final firstBook = data[selectedTestament].keys.first;
+    final firstChapter = data[selectedTestament][firstBook].keys.first;
+    final firstVerse = data[selectedTestament][firstBook][firstChapter].keys.first;
+
+    setState(() {
+      bible = data;
+      selectedBook = firstBook;
+      selectedChapter = firstChapter;
+      selectedVerse = firstVerse;
+    });
   }
 
   @override
@@ -133,12 +77,50 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
     super.dispose();
   }
 
+  List<String> get books {
+    if (bible.isEmpty) return [];
+    return bible[selectedTestament].keys.cast<String>().toList();
+  }
+
+  List<String> get chapters {
+    if (bible.isEmpty || selectedBook.isEmpty) return [];
+    final list = bible[selectedTestament][selectedBook].keys.cast<String>().toList();
+    list.sort((a, b) => int.parse(a).compareTo(int.parse(b)));
+    return list;
+  }
+
+  List<String> get verses {
+    if (bible.isEmpty || selectedBook.isEmpty || selectedChapter.isEmpty) return [];
+    final list = bible[selectedTestament][selectedBook][selectedChapter]
+        .keys
+        .cast<String>()
+        .toList();
+    list.sort((a, b) => int.parse(a).compareTo(int.parse(b)));
+    return list;
+  }
+
+  String get verseText {
+    if (bible.isEmpty ||
+        selectedBook.isEmpty ||
+        selectedChapter.isEmpty ||
+        selectedVerse.isEmpty) {
+      return '';
+    }
+
+    return bible[selectedTestament][selectedBook][selectedChapter][selectedVerse] ??
+        '본문 데이터가 없습니다.';
+  }
+
   void changeTestament(String testament) {
+    final firstBook = bible[testament].keys.first;
+    final firstChapter = bible[testament][firstBook].keys.first;
+    final firstVerse = bible[testament][firstBook][firstChapter].keys.first;
+
     setState(() {
       selectedTestament = testament;
-      selectedBookIndex = 0;
-      selectedChapter = filteredBooks.first.chapters.keys.first;
-      selectedVerse = filteredBooks.first.chapters[selectedChapter]!.keys.first;
+      selectedBook = firstBook;
+      selectedChapter = firstChapter;
+      selectedVerse = firstVerse;
     });
 
     bookController.jumpToItem(0);
@@ -146,83 +128,86 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
     verseController.jumpToItem(0);
   }
 
-  void updateBook(int index) {
+  void changeBook(int index) {
+    final book = books[index];
+    final firstChapter = bible[selectedTestament][book].keys.first;
+    final firstVerse = bible[selectedTestament][book][firstChapter].keys.first;
+
     setState(() {
-      selectedBookIndex = index;
-      selectedChapter = chapterNumbers.first;
-      selectedVerse = verseNumbers.first;
+      selectedBook = book;
+      selectedChapter = firstChapter;
+      selectedVerse = firstVerse;
     });
 
     chapterController.jumpToItem(0);
     verseController.jumpToItem(0);
   }
 
-  void updateChapter(int index) {
+  void changeChapter(int index) {
+    final chapter = chapters[index];
+    final firstVerse = bible[selectedTestament][selectedBook][chapter].keys.first;
+
     setState(() {
-      selectedChapter = chapterNumbers[index];
-      selectedVerse = verseNumbers.first;
+      selectedChapter = chapter;
+      selectedVerse = firstVerse;
     });
 
     verseController.jumpToItem(0);
   }
 
-  void updateVerse(int index) {
+  void changeVerse(int index) {
     setState(() {
-      selectedVerse = verseNumbers[index];
+      selectedVerse = verses[index];
     });
   }
 
   Widget wheelPicker({
     required FixedExtentScrollController controller,
-    required int itemCount,
-    required String Function(int index) labelBuilder,
-    required void Function(int index) onSelectedItemChanged,
+    required List<String> items,
+    required String Function(String value) labelBuilder,
+    required void Function(int index) onChanged,
+    int flex = 1,
   }) {
-    return CupertinoPicker(
-      scrollController: controller,
-      itemExtent: 42,
-      magnification: 1.12,
-      useMagnifier: true,
-      squeeze: 1.1,
-      onSelectedItemChanged: onSelectedItemChanged,
-      children: List.generate(
-        itemCount,
-        (index) => Center(
-          child: Text(
-            labelBuilder(index),
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
+    return Expanded(
+      flex: flex,
+      child: CupertinoPicker(
+        scrollController: controller,
+        itemExtent: 44,
+        diameterRatio: 1.15,
+        magnification: 1.2,
+        useMagnifier: true,
+        squeeze: 0.9,
+        onSelectedItemChanged: onChanged,
+        children: items.map((item) {
+          return Center(
+            child: Text(
+              labelBuilder(item),
+              style: const TextStyle(
+                fontSize: 21,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-          ),
-        ),
+          );
+        }).toList(),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final chapters = chapterNumbers;
-    final verses = verseNumbers;
+    if (bible.isEmpty) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xfff5f3ee),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
           child: Column(
             children: [
-              const SizedBox(height: 8),
-              const Text(
-                'Bible Wheel',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              const SizedBox(height: 18),
-
               SegmentedButton<String>(
                 segments: const [
                   ButtonSegment(value: '구약', label: Text('구약')),
@@ -234,10 +219,10 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
                 },
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 18),
 
               Container(
-                height: 180,
+                height: 170,
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -250,80 +235,70 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
                     ),
                   ],
                 ),
-                child: Row(
+                child: Stack(
                   children: [
-                    Expanded(
-                      flex: 2,
-                      child: wheelPicker(
-                        controller: bookController,
-                        itemCount: filteredBooks.length,
-                        labelBuilder: (index) => filteredBooks[index].name,
-                        onSelectedItemChanged: updateBook,
+                    Center(
+                      child: Container(
+                        height: 46,
+                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xffeeeeee),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
                     ),
-                    Expanded(
-                      child: wheelPicker(
-                        controller: chapterController,
-                        itemCount: chapters.length,
-                        labelBuilder: (index) => '${chapters[index]}장',
-                        onSelectedItemChanged: updateChapter,
-                      ),
-                    ),
-                    Expanded(
-                      child: wheelPicker(
-                        controller: verseController,
-                        itemCount: verses.length,
-                        labelBuilder: (index) => '${verses[index]}절',
-                        onSelectedItemChanged: updateVerse,
-                      ),
+                    Row(
+                      children: [
+                        wheelPicker(
+                          controller: bookController,
+                          items: books,
+                          labelBuilder: (value) => value,
+                          onChanged: changeBook,
+                          flex: 2,
+                        ),
+                        wheelPicker(
+                          controller: chapterController,
+                          items: chapters,
+                          labelBuilder: (value) => '$value장',
+                          onChanged: changeChapter,
+                        ),
+                        wheelPicker(
+                          controller: verseController,
+                          items: verses,
+                          labelBuilder: (value) => '$value절',
+                          onChanged: changeVerse,
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 20),
-
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {});
-                },
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 52),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                ),
-                child: const Text(
-                  'ENTER',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ),
-
-              const SizedBox(height: 20),
+              const SizedBox(height: 18),
 
               Expanded(
                 child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(26),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(28),
+                    borderRadius: BorderRadius.circular(30),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${selectedBook.name} $selectedChapter:$selectedVerse',
+                        '$selectedBook $selectedChapter장 $selectedVerse절',
                         style: const TextStyle(
-                          fontSize: 20,
+                          fontSize: 25,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const Divider(height: 32),
+                      const Divider(height: 34),
                       Text(
-                        selectedText,
+                        verseText,
                         style: const TextStyle(
-                          fontSize: 26,
+                          fontSize: 30,
                           height: 1.55,
                           fontWeight: FontWeight.w500,
                         ),
