@@ -88,6 +88,56 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
         .trim();
   }
 
+  String expandBibleAbbreviation(String keyword) {
+  final input = normalizeSearchText(keyword);
+
+  final aliases = {
+    '창': '창세기',
+    '출': '출애굽기',
+    '레': '레위기',
+    '민': '민수기',
+    '신': '신명기',
+    '마': '마태복음',
+    '막': '마가복음',
+    '눅': '누가복음',
+    '요': '요한복음',
+    '행': '사도행전',
+    '롬': '로마서',
+    '고전': '고린도전서',
+    '고후': '고린도후서',
+    '갈': '갈라디아서',
+    '엡': '에베소서',
+    '빌': '빌립보서',
+    '골': '골로새서',
+    '살전': '데살로니가전서',
+    '살후': '데살로니가후서',
+    '딤전': '디모데전서',
+    '딤후': '디모데후서',
+    '딛': '디도서',
+    '몬': '빌레몬서',
+    '히': '히브리서',
+    '약': '야고보서',
+    '벧전': '베드로전서',
+    '벧후': '베드로후서',
+    '요일': '요한일서',
+    '요이': '요한이서',
+    '요삼': '요한삼서',
+    '유': '유다서',
+    '계': '요한계시록',
+  };
+
+  for (final entry in aliases.entries) {
+    if (input.startsWith(entry.key)) {
+      return input.replaceFirst(
+        entry.key,
+        normalizeSearchText(entry.value),
+      );
+    }
+  }
+
+  return input;
+}
+
 
   List<SearchResult> searchBible(String keyword) {
     final results = <SearchResult>[];
@@ -102,6 +152,7 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
               final verseText = text.toString();
 
               final normalizedKeyword = normalizeSearchText(keyword);
+              final expandedKeyword = expandBibleAbbreviation(keyword);
               final normalVerseText = normalizeSearchText(verseText);
               final normalBook = normalizeSearchText(book);
 
@@ -110,10 +161,20 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
               final ref3 = normalizeSearchText('$book$chapter$verse');
 
               if (normalVerseText.contains(normalizedKeyword) ||
+                  normalVerseText.contains(expandedKeyword) ||
+
                   normalBook.contains(normalizedKeyword) ||
+                  normalBook.contains(expandedKeyword) ||
+
                   ref1.contains(normalizedKeyword) ||
+                  ref1.contains(expandedKeyword) ||
+
                   ref2.contains(normalizedKeyword) ||
-                  ref3.contains(normalizedKeyword)) {
+                  ref2.contains(expandedKeyword) ||
+
+                  ref3.contains(normalizedKeyword) ||
+                  ref3.contains(expandedKeyword)) {
+                
                 results.add(
                   SearchResult(
                     testament: testament,
