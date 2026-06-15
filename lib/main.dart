@@ -20,7 +20,7 @@ class BibleWheelApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFC9A86A),
+          seedColor: const Color(0xFF9A7BD1),
           background: AppColors.background,
         ),
         textTheme: GoogleFonts.notoSansKrTextTheme(),
@@ -31,15 +31,21 @@ class BibleWheelApp extends StatelessWidget {
 }
 
 class AppColors {
-  static const background = Color(0xFFF7F5EF);
-  static const surface = Color(0xFFFFFCF6);
+  // Soft Lavender theme
+  static const background = Color(0xFFF8F6FF);
+  static const surface = Color(0xFFFCFAFF);
   static const surfaceStrong = Color(0xFFFFFFFF);
-  static const text = Color(0xFF3F3A33);
-  static const textMuted = Color(0xFF8A8377);
-  static const gold = Color(0xFFC9A86A);
-  static const goldDark = Color(0xFF8D6B2F);
-  static const divider = Color(0xFFE6DED0);
-  static const shadow = Color(0x0F4A3720);
+  static const text = Color(0xFF2F2940);
+  static const textMuted = Color(0xFF8E86A7);
+  static const gold = Color(0xFF9A7BD1);
+  static const goldDark = Color(0xFF5C3FA3);
+  static const divider = Color(0xFFE4DDF6);
+  static const shadow = Color(0x144D3778);
+
+  static const lavenderPale = Color(0xFFF1ECFF);
+  static const lavenderSoft = Color(0xFFE6DAFF);
+  static const lavenderMid = Color(0xFFC9B8F0);
+  static const lavenderDeep = Color(0xFF6C4AB6);
 }
 
 class BibleWheelPage extends StatefulWidget {
@@ -561,7 +567,7 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
           height: 54,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFEFE7D9)),
+            border: Border.all(color: const Color(0xFFE6DDF7)),
             // Top menu/search buttons intentionally have no shadow.
             // Content cards keep subtle shadows instead.
             boxShadow: const [],
@@ -599,7 +605,7 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
                 width: 42,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFD8CBB7),
+                  color: const Color(0xFFD5C9F2),
                   borderRadius: BorderRadius.circular(999),
                 ),
               ),
@@ -771,7 +777,7 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFFFFFFF), Color(0xFFF1ECE2)],
+          colors: [Color(0xFFFFFFFF), Color(0xFFF4F0FF)],
         ),
         boxShadow: [
           BoxShadow(
@@ -794,13 +800,13 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Color(0xFFEFECE5),
+                    Color(0xFFEAE4F7),
                     Color(0xFFFFFFFF),
-                    Color(0xFFE8E3DA),
+                    Color(0xFFE2DAF2),
                   ],
                   stops: [0.0, 0.48, 1.0],
                 ),
-                border: Border.all(color: const Color(0xFFD9D0C1)),
+                border: Border.all(color: const Color(0xFFD6C9F0)),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.04),
@@ -837,10 +843,10 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
               decoration: BoxDecoration(
                 color: AppColors.surfaceStrong,
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: const Color(0xFFEADCC4)),
+                border: Border.all(color: const Color(0xFFCDBEF0)),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0x183F2A0C),
+                    color: const Color(0x1F6C4AB6),
                     blurRadius: 9,
                     offset: const Offset(0, 3),
                   ),
@@ -938,7 +944,7 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
       decoration: BoxDecoration(
         color: AppColors.surfaceStrong,
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: const Color(0xFFEFE4D5)),
+        border: Border.all(color: const Color(0xFFE6DDF7)),
         boxShadow: [
           BoxShadow(
             color: AppColors.shadow.withOpacity(0.35),
@@ -956,9 +962,9 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF7F1E6),
+                  color: const Color(0xFFF1ECFF),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFE8D8BC)),
+                  border: Border.all(color: const Color(0xFFD8CAF4)),
                 ),
                 child: const Icon(
                   Icons.menu_book_rounded,
@@ -1071,7 +1077,7 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Color(0xFFFBFAF6), AppColors.background],
+              colors: [Color(0xFFFEFCFF), AppColors.background],
             ),
           ),
           child: Padding(
