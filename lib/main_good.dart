@@ -51,7 +51,6 @@ class SearchResult {
 
 class _BibleWheelPageState extends State<BibleWheelPage> {
   Map<String, dynamic> bible = {};
-  bool isProgrammaticMove = false;
 
   String selectedTestament = '구약';
   String selectedBook = '';
@@ -61,6 +60,8 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
   late FixedExtentScrollController bookController;
   late FixedExtentScrollController chapterController;
   late FixedExtentScrollController verseController;
+
+  bool isProgrammaticScroll = false;
 
   @override
   void initState() {
@@ -87,6 +88,13 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
         .replaceAll('장', '')
         .replaceAll('절', '')
         .toLowerCase()
+        .trim();
+  }
+
+  String cleanVerseText(String value) {
+    return value
+        .replaceAll(RegExp(r'<[^>]*>'), '')
+        .replaceAll(RegExp(r'\s+'), ' ')
         .trim();
   }
 
@@ -171,130 +179,6 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
     return input;
   }
 
-
-  String cleanVerseText(String value) {
-    var cleaned = value.trim();
-
-    // Remove section headings accidentally merged into verse text.
-    // Examples:
-    // <노아의 아들들의 족보(대상 1:5-23)> 노아의 아들...
-    cleaned = cleaned.replaceAll(RegExp(r'^\s*<[^>]+>\s*'), '');
-
-    return cleaned.trim();
-  }
-
-  List<SearchResult> directReferenceSearch(String keyword) {
-    final raw = keyword.trim();
-    if (raw.isEmpty || bible.isEmpty) return [];
-
-    final normalizedRaw = normalizeSearchText(raw);
-    final expanded = expandBibleAbbreviation(raw);
-    final hasChapterMarker = raw.contains('장');
-    final hasVerseMarker = raw.contains('절') || raw.contains(':');
-
-    SearchResult? exactVerseResult(
-      String testament,
-      String book,
-      String chapter,
-      String verse,
-    ) {
-      final chaptersMap = bible[testament][book] as Map<String, dynamic>;
-      if (!chaptersMap.containsKey(chapter)) return null;
-
-      final versesMap = chaptersMap[chapter] as Map<String, dynamic>;
-      if (!versesMap.containsKey(verse)) return null;
-
-      return SearchResult(
-        testament: testament,
-        book: book,
-        chapter: chapter,
-        verse: verse,
-        text: cleanVerseText(versesMap[verse].toString()),
-      );
-    }
-
-    List<SearchResult> chapterResults(
-      String testament,
-      String book,
-      String chapter,
-    ) {
-      final chaptersMap = bible[testament][book] as Map<String, dynamic>;
-      if (!chaptersMap.containsKey(chapter)) return [];
-
-      final versesMap = chaptersMap[chapter] as Map<String, dynamic>;
-      return sortedKeys(versesMap)
-          .map(
-            (verse) => SearchResult(
-              testament: testament,
-              book: book,
-              chapter: chapter,
-              verse: verse,
-              text: cleanVerseText(versesMap[verse].toString()),
-            ),
-          )
-          .toList();
-    }
-
-    for (final testament in bible.keys.cast<String>()) {
-      final booksMap = bible[testament] as Map<String, dynamic>;
-
-      for (final book in booksMap.keys.cast<String>()) {
-        final normalBook = normalizeSearchText(book);
-
-        String? numberPart;
-
-        if (normalizedRaw.startsWith(normalBook)) {
-          numberPart = normalizedRaw.substring(normalBook.length);
-        } else if (expanded.startsWith(normalBook)) {
-          numberPart = expanded.substring(normalBook.length);
-        }
-
-        if (numberPart == null || numberPart.isEmpty) continue;
-        if (!RegExp(r'^\d+$').hasMatch(numberPart)) continue;
-
-        final chaptersMap = booksMap[book] as Map<String, dynamic>;
-
-        // If the user explicitly typed "장", or the number itself is a valid
-        // chapter, treat it as chapter search first.
-        // Example: "예레미야33장" or "예레미야33" => 예레미야 33장.
-        if (!hasVerseMarker && chaptersMap.containsKey(numberPart)) {
-          return chapterResults(testament, book, numberPart).take(10).toList();
-        }
-
-        if (hasChapterMarker && !hasVerseMarker) {
-          return [];
-        }
-
-        // Compact verse search.
-        // Examples: 요316 => 요한복음 3:16, 롬823 => 로마서 8:23,
-        // 창101 => 창세기 10:1, 시119176 => 시편 119:176.
-        final candidates = <SearchResult>[];
-
-        for (var split = 1; split < numberPart.length; split++) {
-          final chapter = int.parse(numberPart.substring(0, split)).toString();
-          final verse = int.parse(numberPart.substring(split)).toString();
-
-          final found = exactVerseResult(testament, book, chapter, verse);
-          if (found != null) {
-            candidates.add(found);
-          }
-        }
-
-        if (candidates.isNotEmpty) {
-          candidates.sort((a, b) {
-            final chapterCompare =
-                int.parse(b.chapter).compareTo(int.parse(a.chapter));
-            if (chapterCompare != 0) return chapterCompare;
-            return int.parse(b.verse).compareTo(int.parse(a.verse));
-          });
-          return [candidates.first];
-        }
-      }
-    }
-
-    return [];
-  }
-
   List<SearchResult> searchBible(String keyword) {
     final rawKeyword = keyword.trim();
     final normalizedKeyword = normalizeSearchText(rawKeyword);
@@ -302,11 +186,6 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
 
     if (normalizedKeyword.length < 2) {
       return [];
-    }
-
-    final directResults = directReferenceSearch(rawKeyword);
-    if (directResults.isNotEmpty) {
-      return directResults.take(10).toList();
     }
 
     final results = <SearchResult>[];
@@ -386,7 +265,7 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
       return int.parse(a.verse).compareTo(int.parse(b.verse));
     });
 
-    return results.take(10).toList();
+    return results.take(100).toList();
   }
 
   void moveToVerse(SearchResult result) {
@@ -399,7 +278,11 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
     final chapterIndex = chapterList.indexOf(result.chapter);
     final verseIndex = verseList.indexOf(result.verse);
 
-    isProgrammaticMove = true;
+    if (bookIndex < 0 || chapterIndex < 0 || verseIndex < 0) {
+      return;
+    }
+
+    isProgrammaticScroll = true;
 
     setState(() {
       selectedTestament = result.testament;
@@ -411,19 +294,19 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
-      if (bookIndex >= 0) {
+      if (bookController.hasClients) {
         bookController.jumpToItem(bookIndex);
       }
-      if (chapterIndex >= 0) {
+      if (chapterController.hasClients) {
         chapterController.jumpToItem(chapterIndex);
       }
-      if (verseIndex >= 0) {
+      if (verseController.hasClients) {
         verseController.jumpToItem(verseIndex);
       }
 
       Future.delayed(const Duration(milliseconds: 150), () {
         if (mounted) {
-          isProgrammaticMove = false;
+          isProgrammaticScroll = false;
         }
       });
     });
@@ -478,13 +361,20 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
     }
 
     final rawText = bible[selectedTestament][selectedBook][selectedChapter]
-            [selectedVerse] ??
-        '본문 데이터가 없습니다.';
+            [selectedVerse]
+        ?.toString();
 
-    return cleanVerseText(rawText.toString());
+    if (rawText == null) {
+      return '본문 데이터가 없습니다.';
+    }
+
+    final cleanedText = cleanVerseText(rawText);
+
+    return cleanedText.isEmpty ? '본문 데이터가 없습니다.' : cleanedText;
   }
 
   void changeTestament(String testament) {
+    if (isProgrammaticScroll) return;
     if (testament == selectedTestament || bible.isEmpty) return;
 
     final firstBook = bible[testament].keys.first;
@@ -507,7 +397,9 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
   }
 
   void changeBook(int index) {
-    if (isProgrammaticMove) return;
+    if (isProgrammaticScroll) return;
+    if (index < 0 || index >= books.length) return;
+
     final book = books[index];
     final firstChapter = sortedKeys(bible[selectedTestament][book]).first;
     final firstVerse =
@@ -526,7 +418,9 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
   }
 
   void changeChapter(int index) {
-    if (isProgrammaticMove) return;
+    if (isProgrammaticScroll) return;
+    if (index < 0 || index >= chapters.length) return;
+
     final chapter = chapters[index];
     final firstVerse =
         sortedKeys(bible[selectedTestament][selectedBook][chapter]).first;
@@ -542,7 +436,9 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
   }
 
   void changeVerse(int index) {
-    if (isProgrammaticMove) return;
+    if (isProgrammaticScroll) return;
+    if (index < 0 || index >= verses.length) return;
+
     setState(() {
       selectedVerse = verses[index];
     });

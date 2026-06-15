@@ -51,7 +51,6 @@ class SearchResult {
 
 class _BibleWheelPageState extends State<BibleWheelPage> {
   Map<String, dynamic> bible = {};
-  bool isProgrammaticMove = false;
 
   String selectedTestament = '구약';
   String selectedBook = '';
@@ -399,8 +398,6 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
     final chapterIndex = chapterList.indexOf(result.chapter);
     final verseIndex = verseList.indexOf(result.verse);
 
-    isProgrammaticMove = true;
-
     setState(() {
       selectedTestament = result.testament;
       selectedBook = result.book;
@@ -409,8 +406,6 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-
       if (bookIndex >= 0) {
         bookController.jumpToItem(bookIndex);
       }
@@ -420,12 +415,6 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
       if (verseIndex >= 0) {
         verseController.jumpToItem(verseIndex);
       }
-
-      Future.delayed(const Duration(milliseconds: 150), () {
-        if (mounted) {
-          isProgrammaticMove = false;
-        }
-      });
     });
   }
 
@@ -507,7 +496,6 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
   }
 
   void changeBook(int index) {
-    if (isProgrammaticMove) return;
     final book = books[index];
     final firstChapter = sortedKeys(bible[selectedTestament][book]).first;
     final firstVerse =
@@ -526,7 +514,6 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
   }
 
   void changeChapter(int index) {
-    if (isProgrammaticMove) return;
     final chapter = chapters[index];
     final firstVerse =
         sortedKeys(bible[selectedTestament][selectedBook][chapter]).first;
@@ -542,7 +529,6 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
   }
 
   void changeVerse(int index) {
-    if (isProgrammaticMove) return;
     setState(() {
       selectedVerse = verses[index];
     });
