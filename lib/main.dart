@@ -19,11 +19,27 @@ class BibleWheelApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFFC9A86A),
+          background: AppColors.background,
+        ),
         textTheme: GoogleFonts.notoSansKrTextTheme(),
       ),
       home: const BibleWheelPage(),
     );
   }
+}
+
+class AppColors {
+  static const background = Color(0xFFF7F5EF);
+  static const surface = Color(0xFFFFFCF6);
+  static const surfaceStrong = Color(0xFFFFFFFF);
+  static const text = Color(0xFF3F3A33);
+  static const textMuted = Color(0xFF8A8377);
+  static const gold = Color(0xFFC9A86A);
+  static const goldDark = Color(0xFF8D6B2F);
+  static const divider = Color(0xFFE6DED0);
+  static const shadow = Color(0x0F4A3720);
 }
 
 class BibleWheelPage extends StatefulWidget {
@@ -171,15 +187,9 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
     return input;
   }
 
-
   String cleanVerseText(String value) {
     var cleaned = value.trim();
-
-    // Remove section headings accidentally merged into verse text.
-    // Examples:
-    // <노아의 아들들의 족보(대상 1:5-23)> 노아의 아들...
     cleaned = cleaned.replaceAll(RegExp(r'^\s*<[^>]+>\s*'), '');
-
     return cleaned.trim();
   }
 
@@ -254,9 +264,6 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
 
         final chaptersMap = booksMap[book] as Map<String, dynamic>;
 
-        // If the user explicitly typed "장", or the number itself is a valid
-        // chapter, treat it as chapter search first.
-        // Example: "예레미야33장" or "예레미야33" => 예레미야 33장.
         if (!hasVerseMarker && chaptersMap.containsKey(numberPart)) {
           return chapterResults(testament, book, numberPart).take(10).toList();
         }
@@ -265,9 +272,6 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
           return [];
         }
 
-        // Compact verse search.
-        // Examples: 요316 => 요한복음 3:16, 롬823 => 로마서 8:23,
-        // 창101 => 창세기 10:1, 시119176 => 시편 119:176.
         final candidates = <SearchResult>[];
 
         for (var split = 1; split < numberPart.length; split++) {
@@ -354,14 +358,14 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
       final aBook = normalizeSearchText(a.book);
       final bBook = normalizeSearchText(b.book);
 
-      final aScore = aBook.contains(normalizedKeyword) ||
-              aBook.contains(expandedKeyword)
-          ? 0
-          : 1;
-      final bScore = bBook.contains(normalizedKeyword) ||
-              bBook.contains(expandedKeyword)
-          ? 0
-          : 1;
+      final aScore =
+          aBook.contains(normalizedKeyword) || aBook.contains(expandedKeyword)
+              ? 0
+              : 1;
+      final bScore =
+          bBook.contains(normalizedKeyword) || bBook.contains(expandedKeyword)
+              ? 0
+              : 1;
 
       if (aScore != bScore) {
         return aScore.compareTo(bScore);
@@ -411,20 +415,12 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
-      if (bookIndex >= 0) {
-        bookController.jumpToItem(bookIndex);
-      }
-      if (chapterIndex >= 0) {
-        chapterController.jumpToItem(chapterIndex);
-      }
-      if (verseIndex >= 0) {
-        verseController.jumpToItem(verseIndex);
-      }
+      if (bookIndex >= 0) bookController.jumpToItem(bookIndex);
+      if (chapterIndex >= 0) chapterController.jumpToItem(chapterIndex);
+      if (verseIndex >= 0) verseController.jumpToItem(verseIndex);
 
       Future.delayed(const Duration(milliseconds: 150), () {
-        if (mounted) {
-          isProgrammaticMove = false;
-        }
+        if (mounted) isProgrammaticMove = false;
       });
     });
   }
@@ -507,7 +503,7 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
   }
 
   void changeBook(int index) {
-    if (isProgrammaticMove) return;
+    if (isProgrammaticMove || index < 0 || index >= books.length) return;
     final book = books[index];
     final firstChapter = sortedKeys(bible[selectedTestament][book]).first;
     final firstVerse =
@@ -526,7 +522,7 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
   }
 
   void changeChapter(int index) {
-    if (isProgrammaticMove) return;
+    if (isProgrammaticMove || index < 0 || index >= chapters.length) return;
     final chapter = chapters[index];
     final firstVerse =
         sortedKeys(bible[selectedTestament][selectedBook][chapter]).first;
@@ -542,20 +538,37 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
   }
 
   void changeVerse(int index) {
-    if (isProgrammaticMove) return;
+    if (isProgrammaticMove || index < 0 || index >= verses.length) return;
     setState(() {
       selectedVerse = verses[index];
     });
   }
 
-  Widget testamentMenu() {
-    return IconButton(
-      icon: const Icon(
-        Icons.menu_rounded,
-        size: 34,
-        color: Color(0xFF333333),
+  Widget iconSurface({
+    required IconData icon,
+    required VoidCallback onTap,
+    double size = 28,
+  }) {
+    return Material(
+      color: AppColors.surfaceStrong,
+      borderRadius: BorderRadius.circular(18),
+      elevation: 0,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Container(
+          width: 54,
+          height: 54,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: const Color(0xFFEFE7D9)),
+            // Top menu/search buttons intentionally have no shadow.
+            // Content cards keep subtle shadows instead.
+            boxShadow: const [],
+          ),
+          child: Icon(icon, size: size, color: AppColors.text),
+        ),
       ),
-      onPressed: openMainMenu,
     );
   }
 
@@ -563,19 +576,19 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withOpacity(0.45),
+      barrierColor: Colors.black.withOpacity(0.35),
       builder: (context) {
         return Container(
           margin: const EdgeInsets.fromLTRB(18, 0, 18, 18),
           padding: const EdgeInsets.fromLTRB(22, 14, 22, 18),
           decoration: BoxDecoration(
-            color: const Color(0xFFFAFAFA),
-            borderRadius: BorderRadius.circular(28),
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(30),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.12),
-                blurRadius: 24,
-                offset: const Offset(0, 10),
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
               ),
             ],
           ),
@@ -586,7 +599,7 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
                 width: 42,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFD0D0D0),
+                  color: const Color(0xFFD8CBB7),
                   borderRadius: BorderRadius.circular(999),
                 ),
               ),
@@ -595,20 +608,16 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
                 children: [
                   Text(
                     'Bible Wheel',
-                    style: GoogleFonts.notoSansKr(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF333333),
+                    style: GoogleFonts.notoSerifKr(
+                      fontSize: 21,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.text,
                     ),
                   ),
                   const Spacer(),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(
-                      Icons.close_rounded,
-                      size: 22,
-                      color: Color(0xFF555555),
-                    ),
+                    icon: const Icon(Icons.close_rounded, color: AppColors.text),
                   ),
                 ],
               ),
@@ -629,7 +638,7 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
                   changeTestament('신약');
                 },
               ),
-              const Divider(height: 18),
+              const Divider(height: 18, color: AppColors.divider),
               menuRow(
                 icon: Icons.star_border_rounded,
                 title: '즐겨찾기',
@@ -656,7 +665,7 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
                 onTap: () {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Bible Wheel v0.8')),
+                    const SnackBar(content: Text('Bible Wheel v1.0 UI Soft')),
                   );
                 },
               ),
@@ -679,33 +688,22 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
       contentPadding: EdgeInsets.zero,
       minLeadingWidth: 28,
       leading: icon != null
-          ? Icon(
-              icon,
-              size: 22,
-              color: const Color(0xFF555555),
-            )
+          ? Icon(icon, size: 22, color: AppColors.goldDark)
           : Icon(
               checked
                   ? Icons.radio_button_checked_rounded
                   : Icons.radio_button_unchecked_rounded,
               size: 21,
-              color: const Color(0xFF555555),
+              color: AppColors.goldDark,
             ),
       title: Text(
         title,
         style: GoogleFonts.notoSansKr(
           fontSize: 17,
-          fontWeight: FontWeight.w500,
-          color: const Color(0xFF333333),
+          fontWeight: FontWeight.w600,
+          color: AppColors.text,
         ),
       ),
-      trailing: checked && icon != null
-          ? const Icon(
-              Icons.check_rounded,
-              size: 20,
-              color: Color(0xFF555555),
-            )
-          : null,
       onTap: onTap,
     );
   }
@@ -721,11 +719,11 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
       flex: flex,
       child: CupertinoPicker(
         scrollController: controller,
-        itemExtent: 50,
-        diameterRatio: 1.4,
-        magnification: 1.12,
+        itemExtent: 58,
+        diameterRatio: 0.82,
+        magnification: 1.22,
         useMagnifier: true,
-        squeeze: 1.0,
+        squeeze: 0.92,
         looping: false,
         onSelectedItemChanged: onChanged,
         selectionOverlay: const SizedBox.shrink(),
@@ -736,9 +734,9 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: GoogleFonts.notoSansKr(
-                fontSize: 17,
-                fontWeight: FontWeight.w500,
-                color: const Color(0xFF444444),
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.text,
               ),
             ),
           );
@@ -747,11 +745,312 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
     );
   }
 
-  Widget verticalDivider() {
+  Widget verticalCylinderDivider() {
     return Container(
-      width: 1,
-      height: 120,
-      color: Colors.black.withOpacity(0.08),
+      width: 1.2,
+      height: 154,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.transparent,
+            AppColors.divider.withOpacity(0.9),
+            Colors.transparent,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget wheelFrame() {
+    return Container(
+      height: 245,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(34),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFFFFFFF), Color(0xFFF1ECE2)],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadow.withOpacity(0.35),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 26, 20, 24),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned.fill(
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(26),
+                gradient: const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xFFEFECE5),
+                    Color(0xFFFFFFFF),
+                    Color(0xFFE8E3DA),
+                  ],
+                  stops: [0.0, 0.48, 1.0],
+                ),
+                border: Border.all(color: const Color(0xFFD9D0C1)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(26),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      AppColors.background.withOpacity(0.82),
+                      Colors.transparent,
+                      Colors.transparent,
+                      AppColors.background.withOpacity(0.75),
+                    ],
+                    stops: const [0.0, 0.22, 0.72, 1.0],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Center(
+            child: Container(
+              height: 62,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceStrong,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: const Color(0xFFEADCC4)),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0x183F2A0C),
+                    blurRadius: 9,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Center(
+            child: Container(
+              height: 62,
+              decoration: BoxDecoration(
+                border: Border.symmetric(
+                  horizontal: BorderSide(
+                    color: AppColors.gold.withOpacity(0.45),
+                    width: 1.1,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: -16,
+            left: 0,
+            right: 0,
+            child: Icon(
+              Icons.keyboard_arrow_up_rounded,
+              color: AppColors.goldDark.withOpacity(0.9),
+              size: 30,
+            ),
+          ),
+          Positioned(
+            bottom: -16,
+            left: 0,
+            right: 0,
+            child: Icon(
+              Icons.keyboard_arrow_down_rounded,
+              color: AppColors.goldDark.withOpacity(0.9),
+              size: 30,
+            ),
+          ),
+          Positioned.fill(
+            child: Row(
+              children: [
+                wheelPicker(
+                  controller: bookController,
+                  items: books,
+                  labelBuilder: (value) => value,
+                  onChanged: changeBook,
+                  flex: 2,
+                ),
+                verticalCylinderDivider(),
+                wheelPicker(
+                  controller: chapterController,
+                  items: chapters,
+                  labelBuilder: (value) => '$value장',
+                  onChanged: changeChapter,
+                ),
+                verticalCylinderDivider(),
+                wheelPicker(
+                  controller: verseController,
+                  items: verses,
+                  labelBuilder: (value) => '$value절',
+                  onChanged: changeVerse,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget hintRow() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.touch_app_outlined, size: 22, color: AppColors.textMuted),
+        const SizedBox(width: 8),
+        Text(
+          '위아래로 스크롤하여 선택하세요',
+          style: GoogleFonts.notoSansKr(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textMuted,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget verseCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceStrong,
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: const Color(0xFFEFE4D5)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadow.withOpacity(0.35),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF7F1E6),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFE8D8BC)),
+                ),
+                child: const Icon(
+                  Icons.menu_book_rounded,
+                  color: AppColors.goldDark,
+                  size: 23,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  '$selectedBook $selectedChapter장 $selectedVerse절',
+                  style: GoogleFonts.notoSansKr(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.text,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('즐겨찾기는 다음 버전에서 추가합니다.')),
+                  );
+                },
+                icon: const Icon(
+                  Icons.star_border_rounded,
+                  color: AppColors.goldDark,
+                  size: 28,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Container(height: 1, color: AppColors.gold.withOpacity(0.45)),
+          const SizedBox(height: 24),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Text(
+                verseText,
+                style: GoogleFonts.notoSerifKr(
+                  fontSize: 23,
+                  height: 1.85,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.text,
+                  letterSpacing: -0.2,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(height: 1, color: AppColors.divider.withOpacity(0.65)),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              verseAction(Icons.copy_rounded, '복사'),
+              verseAction(Icons.share_rounded, '공유'),
+              verseAction(Icons.bookmark_add_outlined, '즐겨찾기'),
+              verseAction(Icons.volume_up_outlined, '듣기'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget verseAction(IconData icon, String label) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$label 기능은 다음 버전에서 추가합니다.')),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: AppColors.text, size: 24),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: GoogleFonts.notoSansKr(
+                fontSize: 12,
+                color: AppColors.textMuted,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -759,153 +1058,82 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
   Widget build(BuildContext context) {
     if (bible.isEmpty) {
       return const Scaffold(
-        backgroundColor: Color(0xFFF8F8F8),
+        backgroundColor: AppColors.background,
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F8F8),
+      backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  testamentMenu(),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: () async {
-                      final result = await Navigator.push<SearchResult>(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => SearchPage(
-                            searchBible: searchBible,
-                          ),
-                        ),
-                      );
-
-                      if (result != null) {
-                        moveToVerse(result);
-                      }
-                    },
-                    icon: const Icon(
-                      Icons.search_rounded,
-                      color: Color(0xFF555555),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              Container(
-                height: 185,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(32),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: Stack(
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFFFBFAF6), AppColors.background],
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
+            child: Column(
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Center(
-                      child: Container(
-                        height: 44,
-                        margin: const EdgeInsets.symmetric(horizontal: 20),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF5F5F5),
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                      ),
+                    iconSurface(
+                      icon: Icons.menu_rounded,
+                      onTap: openMainMenu,
+                      size: 34,
                     ),
-                    Center(
-                      child: Container(
-                        height: 46,
-                        margin: const EdgeInsets.symmetric(horizontal: 28),
-                        decoration: BoxDecoration(
-                          border: Border.symmetric(
-                            horizontal: BorderSide(
-                              color: Colors.black.withOpacity(0.14),
-                              width: 1.2,
-                            ),
+                    const Spacer(),
+                    Column(
+                      children: [
+                        Text(
+                          'Bible Wheel',
+                          style: GoogleFonts.notoSerifKr(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.text,
+                            letterSpacing: -0.4,
                           ),
                         ),
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        wheelPicker(
-                          controller: bookController,
-                          items: books,
-                          labelBuilder: (value) => value,
-                          onChanged: changeBook,
-                          flex: 2,
-                        ),
-                        verticalDivider(),
-                        wheelPicker(
-                          controller: chapterController,
-                          items: chapters,
-                          labelBuilder: (value) => '$value장',
-                          onChanged: changeChapter,
-                        ),
-                        verticalDivider(),
-                        wheelPicker(
-                          controller: verseController,
-                          items: verses,
-                          labelBuilder: (value) => '$value절',
-                          onChanged: changeVerse,
+                        const SizedBox(height: 2),
+                        Text(
+                          '말씀의 길을 함께 걷다',
+                          style: GoogleFonts.notoSansKr(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textMuted,
+                          ),
                         ),
                       ],
                     ),
+                    const Spacer(),
+                    iconSurface(
+                      icon: Icons.search_rounded,
+                      size: 32,
+                      onTap: () async {
+                        final result = await Navigator.push<SearchResult>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => SearchPage(searchBible: searchBible),
+                          ),
+                        );
+
+                        if (result != null) moveToVerse(result);
+                      },
+                    ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 14),
-              Expanded(
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(26, 26, 26, 20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(32),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '$selectedBook $selectedChapter장 $selectedVerse절',
-                        style: GoogleFonts.notoSansKr(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF444444),
-                        ),
-                      ),
-                      const Divider(height: 34),
-                      Expanded(
-                        child: SingleChildScrollView(
-                          child: Text(
-                            verseText,
-                            style: GoogleFonts.notoSerifKr(
-                              fontSize: 21,
-                              height: 1.9,
-                              fontWeight: FontWeight.w400,
-                              color: const Color(0xFF444444),
-                              letterSpacing: -0.1,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+                const SizedBox(height: 22),
+                wheelFrame(),
+                const SizedBox(height: 14),
+                hintRow(),
+                const SizedBox(height: 16),
+                Expanded(child: verseCard()),
+              ],
+            ),
           ),
         ),
       ),
@@ -940,22 +1168,21 @@ class _SearchPageState extends State<SearchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F8F8),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF8F8F8),
+        backgroundColor: AppColors.background,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_rounded,
-            color: Color(0xFF333333),
-          ),
+          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.text),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           '성경 검색',
           style: GoogleFonts.notoSansKr(
-            color: const Color(0xFF333333),
-            fontWeight: FontWeight.w600,
+            color: AppColors.text,
+            fontWeight: FontWeight.w800,
+            fontSize: 24,
           ),
         ),
       ),
@@ -963,65 +1190,95 @@ class _SearchPageState extends State<SearchPage> {
         padding: const EdgeInsets.all(18),
         child: Column(
           children: [
-            TextField(
-              controller: searchController,
-              autofocus: true,
-              decoration: InputDecoration(
-                hintText: '예: 태초, 모세, 요316, 롬823',
-                prefixIcon: const Icon(Icons.search_rounded),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(18),
-                  borderSide: BorderSide.none,
-                ),
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.surfaceStrong,
+                borderRadius: BorderRadius.circular(22),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.shadow.withOpacity(0.25),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              onChanged: (value) {
-                final keyword = value.trim();
+              child: TextField(
+                controller: searchController,
+                autofocus: true,
+                style: GoogleFonts.notoSansKr(
+                  color: AppColors.text,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+                decoration: InputDecoration(
+                  hintText: '예: 태초, 모세, 요316, 롬823',
+                  hintStyle: GoogleFonts.notoSansKr(color: AppColors.textMuted),
+                  prefixIcon: const Icon(
+                    Icons.search_rounded,
+                    color: AppColors.textMuted,
+                  ),
+                  filled: true,
+                  fillColor: Colors.transparent,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(22),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 18,
+                  ),
+                ),
+                onChanged: (value) {
+                  final keyword = value.trim();
 
-                setState(() {
-                  hasTyped = keyword.isNotEmpty;
-                  results = keyword.length < 2
-                      ? []
-                      : widget.searchBible(keyword);
-                });
-              },
+                  setState(() {
+                    hasTyped = keyword.isNotEmpty;
+                    results = keyword.length < 2 ? [] : widget.searchBible(keyword);
+                  });
+                },
+              ),
             ),
             const SizedBox(height: 16),
             Expanded(
               child: results.isEmpty
                   ? Center(
                       child: Text(
-                        hasTyped
-                            ? '검색 결과가 없습니다'
-                            : '검색어를 두 글자 이상 입력하세요',
+                        hasTyped ? '검색 결과가 없습니다' : '검색어를 두 글자 이상 입력하세요',
                         style: GoogleFonts.notoSansKr(
-                          color: const Color(0xFF555555),
+                          color: AppColors.textMuted,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     )
                   : ListView.separated(
                       itemCount: results.length,
-                      separatorBuilder: (_, __) => const Divider(height: 1),
+                      separatorBuilder: (_, __) =>
+                          const Divider(height: 1, color: AppColors.divider),
                       itemBuilder: (context, index) {
                         final result = results[index];
 
                         return ListTile(
+                          contentPadding:
+                              const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
                           title: Text(
                             '${result.book} ${result.chapter}장 ${result.verse}절',
                             style: GoogleFonts.notoSansKr(
-                              fontWeight: FontWeight.w700,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.text,
+                              fontSize: 17,
                             ),
                           ),
                           subtitle: Text(
                             result.text,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.notoSerifKr(),
+                            style: GoogleFonts.notoSerifKr(
+                              color: AppColors.text,
+                              fontSize: 16,
+                              height: 1.5,
+                            ),
                           ),
-                          onTap: () {
-                            Navigator.pop(context, result);
-                          },
+                          onTap: () => Navigator.pop(context, result),
                         );
                       },
                     ),
