@@ -1100,7 +1100,7 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '말씀의 길을 함께 걷다',
+                          '하나님의 말씀 삶의 중심이 되다',
                           style: GoogleFonts.notoSansKr(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
