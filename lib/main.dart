@@ -49,7 +49,6 @@ class SearchResult {
   });
 }
 
-
 class _BibleWheelPageState extends State<BibleWheelPage> {
   Map<String, dynamic> bible = {};
 
@@ -78,6 +77,7 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
     verseController.dispose();
     super.dispose();
   }
+
   String normalizeSearchText(String value) {
     return value
         .replaceAll(' ', '')
@@ -89,55 +89,51 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
   }
 
   String expandBibleAbbreviation(String keyword) {
-  final input = normalizeSearchText(keyword);
+    final input = normalizeSearchText(keyword);
 
-  final aliases = {
-    '창': '창세기',
-    '출': '출애굽기',
-    '레': '레위기',
-    '민': '민수기',
-    '신': '신명기',
-    '마': '마태복음',
-    '막': '마가복음',
-    '눅': '누가복음',
-    '요': '요한복음',
-    '행': '사도행전',
-    '롬': '로마서',
-    '고전': '고린도전서',
-    '고후': '고린도후서',
-    '갈': '갈라디아서',
-    '엡': '에베소서',
-    '빌': '빌립보서',
-    '골': '골로새서',
-    '살전': '데살로니가전서',
-    '살후': '데살로니가후서',
-    '딤전': '디모데전서',
-    '딤후': '디모데후서',
-    '딛': '디도서',
-    '몬': '빌레몬서',
-    '히': '히브리서',
-    '약': '야고보서',
-    '벧전': '베드로전서',
-    '벧후': '베드로후서',
-    '요일': '요한일서',
-    '요이': '요한이서',
-    '요삼': '요한삼서',
-    '유': '유다서',
-    '계': '요한계시록',
-  };
+    final aliases = {
+      '창': '창세기',
+      '출': '출애굽기',
+      '레': '레위기',
+      '민': '민수기',
+      '신': '신명기',
+      '마': '마태복음',
+      '막': '마가복음',
+      '눅': '누가복음',
+      '요': '요한복음',
+      '행': '사도행전',
+      '롬': '로마서',
+      '고전': '고린도전서',
+      '고후': '고린도후서',
+      '갈': '갈라디아서',
+      '엡': '에베소서',
+      '빌': '빌립보서',
+      '골': '골로새서',
+      '살전': '데살로니가전서',
+      '살후': '데살로니가후서',
+      '딤전': '디모데전서',
+      '딤후': '디모데후서',
+      '딛': '디도서',
+      '몬': '빌레몬서',
+      '히': '히브리서',
+      '약': '야고보서',
+      '벧전': '베드로전서',
+      '벧후': '베드로후서',
+      '요일': '요한일서',
+      '요이': '요한이서',
+      '요삼': '요한삼서',
+      '유': '유다서',
+      '계': '요한계시록',
+    };
 
-  for (final entry in aliases.entries) {
-    if (input.startsWith(entry.key)) {
-      return input.replaceFirst(
-        entry.key,
-        normalizeSearchText(entry.value),
-      );
+    for (final entry in aliases.entries) {
+      if (input.startsWith(entry.key)) {
+        return input.replaceFirst(entry.key, normalizeSearchText(entry.value));
+      }
     }
+
+    return input;
   }
-
-  return input;
-}
-
 
   List<SearchResult> searchBible(String keyword) {
     final results = <SearchResult>[];
@@ -148,104 +144,129 @@ class _BibleWheelPageState extends State<BibleWheelPage> {
       (booksMap as Map<String, dynamic>).forEach((book, chaptersMap) {
         (chaptersMap as Map<String, dynamic>).forEach((chapter, versesMap) {
           (versesMap as Map<String, dynamic>).forEach((verse, text) {
-            (versesMap as Map<String, dynamic>).forEach((verse, text) {
-              final verseText = text.toString();
+            final verseText = text.toString();
 
-              final normalizedKeyword = normalizeSearchText(keyword);
-              final expandedKeyword = expandBibleAbbreviation(keyword);
-              final normalVerseText = normalizeSearchText(verseText);
-              final normalBook = normalizeSearchText(book);
+            final normalizedKeyword = normalizeSearchText(keyword);
+            final expandedKeyword = expandBibleAbbreviation(keyword);
+            final normalVerseText = normalizeSearchText(verseText);
+            final normalBook = normalizeSearchText(book);
 
-              final ref1 = normalizeSearchText('$book $chapter장 $verse절');
-              final ref2 = normalizeSearchText('$book $chapter:$verse');
-              final ref3 = normalizeSearchText('$book$chapter$verse');
+            final ref1 = normalizeSearchText('$book $chapter장 $verse절');
+            final ref2 = normalizeSearchText('$book $chapter:$verse');
+            final ref3 = normalizeSearchText('$book$chapter$verse');
 
-              if (normalVerseText.contains(normalizedKeyword) ||
-                  normalVerseText.contains(expandedKeyword) ||
-
-                  normalBook.contains(normalizedKeyword) ||
-                  normalBook.contains(expandedKeyword) ||
-
-                  ref1.contains(normalizedKeyword) ||
-                  ref1.contains(expandedKeyword) ||
-
-                  ref2.contains(normalizedKeyword) ||
-                  ref2.contains(expandedKeyword) ||
-
-                  ref3.contains(normalizedKeyword) ||
-                  ref3.contains(expandedKeyword)) {
-                
-                results.add(
-                  SearchResult(
-                    testament: testament,
-                    book: book,
-                    chapter: chapter,
-                    verse: verse,
-                    text: verseText,
-                  ),
-                );
-              }
-            });
+            if (normalVerseText.contains(normalizedKeyword) ||
+                normalVerseText.contains(expandedKeyword) ||
+                normalBook.contains(normalizedKeyword) ||
+                normalBook.contains(expandedKeyword) ||
+                ref1.contains(normalizedKeyword) ||
+                ref1.contains(expandedKeyword) ||
+                ref2.contains(normalizedKeyword) ||
+                ref2.contains(expandedKeyword) ||
+                ref3.contains(normalizedKeyword) ||
+                ref3.contains(expandedKeyword)) {
+              results.add(
+                SearchResult(
+                  testament: testament,
+                  book: book,
+                  chapter: chapter,
+                  verse: verse,
+                  text: verseText,
+                ),
+              );
+            }
           });
         });
       });
     });
 
+    final searchKey = normalizeSearchText(keyword);
+
+    results.sort((a, b) {
+      final aScore = normalizeSearchText(a.book).contains(searchKey) ? 0 : 1;
+      final bScore = normalizeSearchText(b.book).contains(searchKey) ? 0 : 1;
+
+      return aScore.compareTo(bScore);
+    });
+
     return results;
   }
 
-void moveToVerse(SearchResult result) {
-  final bookList = bible[result.testament].keys.cast<String>().toList();
-  final chapterList = sortedKeys(bible[result.testament][result.book]);
-  final verseList =
-      sortedKeys(bible[result.testament][result.book][result.chapter]);
+  void moveToVerse(SearchResult result) {
+    final bookList = bible[result.testament].keys.cast<String>().toList();
+    final chapterList = sortedKeys(bible[result.testament][result.book]);
+    final verseList = sortedKeys(
+      bible[result.testament][result.book][result.chapter],
+    );
 
-  final bookIndex = bookList.indexOf(result.book);
-  final chapterIndex = chapterList.indexOf(result.chapter);
-  final verseIndex = verseList.indexOf(result.verse);
+    final bookIndex = bookList.indexOf(result.book);
+    final chapterIndex = chapterList.indexOf(result.chapter);
+    final verseIndex = verseList.indexOf(result.verse);
 
-  setState(() {
-    selectedTestament = result.testament;
-    selectedBook = result.book;
-    selectedChapter = result.chapter;
-    selectedVerse = result.verse;
-  });
+    setState(() {
+      selectedTestament = result.testament;
+      selectedBook = result.book;
+      selectedChapter = result.chapter;
+      selectedVerse = result.verse;
+    });
 
-  if (bookIndex >= 0) bookController.jumpToItem(bookIndex);
-  if (chapterIndex >= 0) chapterController.jumpToItem(chapterIndex);
-  if (verseIndex >= 0) verseController.jumpToItem(verseIndex);
-}
+    if (bookIndex >= 0) bookController.jumpToItem(bookIndex);
+    if (chapterIndex >= 0) chapterController.jumpToItem(chapterIndex);
+    if (verseIndex >= 0) verseController.jumpToItem(verseIndex);
+  }
 
-void openSearchDialog() {
-  final searchController = TextEditingController();
-  List<SearchResult> results = [];
+  void openSearchDialog() {
+    final searchController = TextEditingController();
+    final focusNode = FocusNode();
+    List<SearchResult> results = [];
 
-  showDialog(
-    context: context,
-    builder: (context) {
-      return StatefulBuilder(
-        builder: (context, setDialogState) {
-          return AlertDialog(
-            title: const Text('성경 검색'),
-            content: SizedBox(
-              width: double.maxFinite,
-              height: 320,
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          focusNode.requestFocus();
+        });
+
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.82,
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
+              decoration: const BoxDecoration(
+                color: Color(0xFFF7F3FA),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+              ),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text(
+                    '성경 검색',
+                    style: GoogleFonts.notoSansKr(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+
                   TextField(
                     controller: searchController,
-                    autofocus: true,
                     decoration: const InputDecoration(
                       hintText: '예: 태초, 사랑, 요한복음 3:16',
                       prefixIcon: Icon(Icons.search_rounded),
                     ),
                     onChanged: (value) {
+                      final keyword = value.trim();
+
                       setDialogState(() {
-                        results = searchBible(value.trim());
+                        results = keyword.isEmpty ? [] : searchBible(keyword);
                       });
                     },
                   ),
-                  const SizedBox(height: 16),
+
+                  const SizedBox(height: 20),
+
                   Expanded(
                     child: results.isEmpty
                         ? const Center(child: Text('검색어를 입력하세요.'))
@@ -279,23 +300,30 @@ void openSearchDialog() {
                   ),
                 ],
               ),
-            ),
-          );
-        },
-      );
-    },
-  );
-}
-
+            );
+          },
+        );
+      },
+    ).then((_) {
+      searchController.dispose();
+      focusNode.dispose();
+    });
+  }
 
   Future<void> loadBible() async {
-    final jsonString = await rootBundle.loadString('assets/bible.json');
+    final jsonString = await rootBundle.loadString('assets/bible_full.json');
     final data = json.decode(jsonString) as Map<String, dynamic>;
+
+    print('구약 책 수: ${data["구약"].length}');
+    print('신약 책 수: ${data["신약"].length}');
+    print('구약 첫 5권: ${data["구약"].keys.take(5).toList()}');
+    print('신약 첫 5권: ${data["신약"].keys.take(5).toList()}');
 
     final firstBook = data[selectedTestament].keys.first;
     final firstChapter = sortedKeys(data[selectedTestament][firstBook]).first;
-    final firstVerse =
-        sortedKeys(data[selectedTestament][firstBook][firstChapter]).first;
+    final firstVerse = sortedKeys(
+      data[selectedTestament][firstBook][firstChapter],
+    ).first;
 
     setState(() {
       bible = data;
@@ -336,8 +364,7 @@ void openSearchDialog() {
       return '';
     }
 
-    return bible[selectedTestament][selectedBook][selectedChapter]
-            [selectedVerse] ??
+    return bible[selectedTestament][selectedBook][selectedChapter][selectedVerse] ??
         '본문 데이터가 없습니다.';
   }
 
@@ -346,8 +373,9 @@ void openSearchDialog() {
 
     final firstBook = bible[testament].keys.first;
     final firstChapter = sortedKeys(bible[testament][firstBook]).first;
-    final firstVerse =
-        sortedKeys(bible[testament][firstBook][firstChapter]).first;
+    final firstVerse = sortedKeys(
+      bible[testament][firstBook][firstChapter],
+    ).first;
 
     setState(() {
       selectedTestament = testament;
@@ -364,8 +392,9 @@ void openSearchDialog() {
   void changeBook(int index) {
     final book = books[index];
     final firstChapter = sortedKeys(bible[selectedTestament][book]).first;
-    final firstVerse =
-        sortedKeys(bible[selectedTestament][book][firstChapter]).first;
+    final firstVerse = sortedKeys(
+      bible[selectedTestament][book][firstChapter],
+    ).first;
 
     setState(() {
       selectedBook = book;
@@ -379,8 +408,9 @@ void openSearchDialog() {
 
   void changeChapter(int index) {
     final chapter = chapters[index];
-    final firstVerse =
-        sortedKeys(bible[selectedTestament][selectedBook][chapter]).first;
+    final firstVerse = sortedKeys(
+      bible[selectedTestament][selectedBook][chapter],
+    ).first;
 
     setState(() {
       selectedChapter = chapter;
@@ -397,173 +427,160 @@ void openSearchDialog() {
   }
 
   Widget testamentMenu() {
-  return IconButton(
-    icon: const Icon(
-      Icons.menu_rounded,
-      size: 34,
-      color: Color(0xFF333333),
-    ),
-    onPressed: openMainMenu,
-  );
-}
+    return IconButton(
+      icon: const Icon(Icons.menu_rounded, size: 34, color: Color(0xFF333333)),
+      onPressed: openMainMenu,
+    );
+  }
 
-void openMainMenu() {
-  showModalBottomSheet(
-    context: context,
-    backgroundColor: Colors.transparent,
-    barrierColor: Colors.black.withOpacity(0.45),
-    builder: (context) {
-      return Container(
-        margin: const EdgeInsets.fromLTRB(18, 0, 18, 18),
-        padding: const EdgeInsets.fromLTRB(22, 14, 22, 18),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFAFAFA),
-          borderRadius: BorderRadius.circular(28),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.12),
-              blurRadius: 24,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 42,
-              height: 4,
-              decoration: BoxDecoration(
-                color: const Color(0xFFD0D0D0),
-                borderRadius: BorderRadius.circular(999),
+  void openMainMenu() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.45),
+      builder: (context) {
+        return Container(
+          margin: const EdgeInsets.fromLTRB(18, 0, 18, 18),
+          padding: const EdgeInsets.fromLTRB(22, 14, 22, 18),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFAFAFA),
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.12),
+                blurRadius: 24,
+                offset: const Offset(0, 10),
               ),
-            ),
-
-            const SizedBox(height: 16),
-
-            Row(
-              children: [
-                Text(
-                  'Bible Wheel',
-                  style: GoogleFonts.notoSansKr(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF333333),
-                  ),
-                ),
-                const Spacer(),
-                IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(
-                    Icons.close_rounded,
-                    size: 22,
-                    color: Color(0xFF555555),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 4),
-
-            menuRow(
-              title: '구약',
-              checked: selectedTestament == '구약',
-              onTap: () {
-                Navigator.pop(context);
-                changeTestament('구약');
-              },
-            ),
-            menuRow(
-              title: '신약',
-              checked: selectedTestament == '신약',
-              onTap: () {
-                Navigator.pop(context);
-                changeTestament('신약');
-              },
-            ),
-
-            const Divider(height: 18),
-
-            menuRow(
-              icon: Icons.star_border_rounded,
-              title: '즐겨찾기',
-              onTap: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('즐겨찾기는 다음 버전에서 추가합니다.')),
-                );
-              },
-            ),
-            menuRow(
-              icon: Icons.history_rounded,
-              title: '최근 본 말씀',
-              onTap: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('최근 본 말씀은 다음 버전에서 추가합니다.')),
-                );
-              },
-            ),
-            menuRow(
-              icon: Icons.info_outline_rounded,
-              title: '정보',
-              onTap: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Bible Wheel v0.6')),
-                );
-              },
-            ),
-          ],
-        ),
-      );
-    },
-  );
-}
-
-Widget menuRow({
-  IconData? icon,
-  required String title,
-  required VoidCallback onTap,
-  bool checked = false,
-}) {
-  return ListTile(
-    dense: true,
-    visualDensity: const VisualDensity(vertical: -2),
-    contentPadding: EdgeInsets.zero,
-    minLeadingWidth: 28,
-    leading: icon != null
-        ? Icon(
-            icon,
-            size: 22,
-            color: const Color(0xFF555555),
-          )
-        : Icon(
-            checked
-                ? Icons.radio_button_checked_rounded
-                : Icons.radio_button_unchecked_rounded,
-            size: 21,
-            color: const Color(0xFF555555),
+            ],
           ),
-    title: Text(
-      title,
-      style: GoogleFonts.notoSansKr(
-        fontSize: 17,
-        fontWeight: FontWeight.w500,
-        color: const Color(0xFF333333),
-      ),
-    ),
-    trailing: checked && icon != null
-        ? const Icon(
-            Icons.check_rounded,
-            size: 20,
-            color: Color(0xFF555555),
-          )
-        : null,
-    onTap: onTap,
-  );
-}
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 42,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFD0D0D0),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
 
+              const SizedBox(height: 16),
+
+              Row(
+                children: [
+                  Text(
+                    'Bible Wheel',
+                    style: GoogleFonts.notoSansKr(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF333333),
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      size: 22,
+                      color: Color(0xFF555555),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 4),
+
+              menuRow(
+                title: '구약',
+                checked: selectedTestament == '구약',
+                onTap: () {
+                  Navigator.pop(context);
+                  changeTestament('구약');
+                },
+              ),
+              menuRow(
+                title: '신약',
+                checked: selectedTestament == '신약',
+                onTap: () {
+                  Navigator.pop(context);
+                  changeTestament('신약');
+                },
+              ),
+
+              const Divider(height: 18),
+
+              menuRow(
+                icon: Icons.star_border_rounded,
+                title: '즐겨찾기',
+                onTap: () {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('즐겨찾기는 다음 버전에서 추가합니다.')),
+                  );
+                },
+              ),
+              menuRow(
+                icon: Icons.history_rounded,
+                title: '최근 본 말씀',
+                onTap: () {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('최근 본 말씀은 다음 버전에서 추가합니다.')),
+                  );
+                },
+              ),
+              menuRow(
+                icon: Icons.info_outline_rounded,
+                title: '정보',
+                onTap: () {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Bible Wheel v0.6')),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget menuRow({
+    IconData? icon,
+    required String title,
+    required VoidCallback onTap,
+    bool checked = false,
+  }) {
+    return ListTile(
+      dense: true,
+      visualDensity: const VisualDensity(vertical: -2),
+      contentPadding: EdgeInsets.zero,
+      minLeadingWidth: 28,
+      leading: icon != null
+          ? Icon(icon, size: 22, color: const Color(0xFF555555))
+          : Icon(
+              checked
+                  ? Icons.radio_button_checked_rounded
+                  : Icons.radio_button_unchecked_rounded,
+              size: 21,
+              color: const Color(0xFF555555),
+            ),
+      title: Text(
+        title,
+        style: GoogleFonts.notoSansKr(
+          fontSize: 17,
+          fontWeight: FontWeight.w500,
+          color: const Color(0xFF333333),
+        ),
+      ),
+      trailing: checked && icon != null
+          ? const Icon(Icons.check_rounded, size: 20, color: Color(0xFF555555))
+          : null,
+      onTap: onTap,
+    );
+  }
 
   Widget wheelPicker({
     required FixedExtentScrollController controller,
@@ -581,7 +598,7 @@ Widget menuRow({
         magnification: 1.12,
         useMagnifier: true,
         squeeze: 1.0,
-        looping: items.length > 3,
+        looping: false,
         onSelectedItemChanged: onChanged,
         selectionOverlay: const SizedBox.shrink(),
         children: items.map((item) {
@@ -593,7 +610,7 @@ Widget menuRow({
               style: GoogleFonts.notoSansKr(
                 fontSize: 17,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFF444444),                
+                color: const Color(0xFF444444),
               ),
             ),
           );
@@ -631,7 +648,21 @@ Widget menuRow({
                   testamentMenu(),
                   const Spacer(),
                   IconButton(
-                    onPressed: openSearchDialog,
+                    onPressed: () async {
+                      final result = await Navigator.push<SearchResult>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => SearchPage(
+                            bible: bible,
+                            searchBible: searchBible,
+                          ),
+                        ),
+                      );
+
+                      if (result != null) {
+                        moveToVerse(result);
+                      }
+                    },
                     icon: const Icon(
                       Icons.search_rounded,
                       color: Color(0xFF555555),
@@ -751,6 +782,105 @@ Widget menuRow({
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class SearchPage extends StatefulWidget {
+  final Map<String, dynamic> bible;
+  final List<SearchResult> Function(String keyword) searchBible;
+
+  const SearchPage({super.key, required this.bible, required this.searchBible});
+
+  @override
+  State<SearchPage> createState() => _SearchPageState();
+}
+
+class _SearchPageState extends State<SearchPage> {
+  final TextEditingController searchController = TextEditingController();
+
+  List<SearchResult> results = [];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xfff5f3ee),
+      appBar: AppBar(
+        backgroundColor: const Color(0xfff5f3ee),
+        elevation: 0,
+        title: Text(
+          '성경 검색',
+          style: GoogleFonts.notoSansKr(
+            color: const Color(0xFF333333),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          children: [
+            TextField(
+              controller: searchController,
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: '예: 태초, 모세, 요316, 롬823',
+                prefixIcon: const Icon(Icons.search_rounded),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(18),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  results = value.trim().isEmpty
+                      ? []
+                      : widget.searchBible(value.trim());
+                });
+              },
+            ),
+
+            const SizedBox(height: 16),
+
+            Expanded(
+              child: results.isEmpty
+                  ? Center(
+                      child: Text(
+                        '검색어를 입력하세요',
+                        style: GoogleFonts.notoSansKr(),
+                      ),
+                    )
+                  : ListView.separated(
+                      itemCount: results.length,
+                      separatorBuilder: (_, __) => const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final result = results[index];
+
+                        return ListTile(
+                          title: Text(
+                            '${result.book} ${result.chapter}장 ${result.verse}절',
+                            style: GoogleFonts.notoSansKr(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          subtitle: Text(
+                            result.text,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.notoSerifKr(),
+                          ),
+                          onTap: () {
+                            Navigator.pop(context, result);
+                          },
+                        );
+                      },
+                    ),
+            ),
+          ],
         ),
       ),
     );
